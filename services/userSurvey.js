@@ -61,6 +61,31 @@ class SurveyService {
     async deleteSurvey(id) {
         return userSurvey.findByIdAndDelete(id);
     }
+
+async  extractKeysAndValues(surveyName, searchKey) {
+    try {
+      // Find the document based on the survey name
+      const surveyDocument = await userSurvey.findOne({ "Name": surveyName });
+
+      // Initialize empty arrays to store keys and values
+      const keys = [];
+      const values = [];
+
+      // Iterate through the keys of the survey document
+      for (const [key, value] of Object.entries(surveyDocument)) {
+        // Check if the searchKey is present in the current key
+        if (key.includes(searchKey)) {
+          keys.push(key);
+          values.push(value);
+        }
+      }
+
+      return { keys, values };
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
 }
 
 module.exports = new SurveyService();

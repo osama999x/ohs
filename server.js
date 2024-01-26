@@ -45,8 +45,6 @@ app.use('/api/userSurvey',userSurveyRouter);
 app.use('/api/managerReset',managerReqRouter);
 
 
-
-
 //Listening Server
 app.listen(Port, () => {
     console.log("Server is Running On Port: " + Port);

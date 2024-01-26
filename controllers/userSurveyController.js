@@ -70,6 +70,26 @@ async getSurveyByUserId(req,res){
       res.status(500).json({ error: 'Internal Server Error' });
     }
   }
+// Controller function to handle requests
+async  surveyController(req, res) {
+  const {surveyName} = req.body; // Assuming the survey name is in the route parameter
+  const searchKeyStrength = "Strength";
+  const searchKeyGoal = "Goal";
+
+  try {
+    // Extract keys and values related to strengths
+    const strengthResult = await surveyService.extractKeysAndValues(surveyName, searchKeyStrength);
+
+    // Extract keys and values related to goals
+    const goalResult = await surveyService.extractKeysAndValues(surveyName, searchKeyGoal);
+
+    res.json({ strengthResult, goalResult });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+
 }
 
 module.exports = new SurveyController();

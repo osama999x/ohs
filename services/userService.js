@@ -36,10 +36,7 @@ const userService = {
         }
     },
     createManager: async ( username, email,department,jobTitle,company, password, Image) => {
-        const dup1 = await User.findOne({ username: username });
-        if (dup1) {
-            throw new Error("Username already exists");
-        }
+
         const dup = await User.findOne({ email: email });
         if (dup) {
             throw new Error("Email already in use");

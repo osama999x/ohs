@@ -13,7 +13,7 @@ const Company = require('../models/company.js');
 const userSurvey = require('../models/userSurvey');
 const ManagerResetPass=require('../models/ManagerResetPass.js')
 const ForgotPasswordOtp=require('../utils/forgotPassOTP.js')
-
+const EmailManagerDetails=require('../utils/emailManagerDetails.js')
 const authController = {
     register: async (req, res, next) => {
         try {
@@ -106,14 +106,14 @@ const authController = {
                 //     httpOnly: true
                 // })
                 // Handle success
-                const ManagerMail = await sendEmail(newUser.email, password);
+                const ManagerMail = await EmailManagerDetails(newUser.email, password);
                 if (!ManagerMail) {
                     console.log('Couldnt Send Email to Manager')
                 }
-                res.status(201).send({ status: 200, message: 'User registered successfully', data: newUser, AccessToken: Access, RefreshToken: Refresh, auth: true });
+                res.status(201).send({ status: 200, message: 'Manager registered successfully', data: newUser, AccessToken: Access, RefreshToken: Refresh, auth: true });
             } else {
                 // Handle failure
-                res.status(500).send('User registration failed');
+                res.status(500).send({message:'Manager registration failed'});
             }
         } catch (error) {
             console.log(error);
@@ -512,9 +512,10 @@ const authController = {
           if (emailFind.role.role_Name == "Manager") {
             const Notifications = new ManagerResetPass({
               userId: emailFind._id,
-              description: `${emailFind.username} has Requested for Update Password`
+              description: `${emailFind.username}'Against this Email'${email.email} has Requested for Update Password`
             });
             await Notifications.save();
+            if(Notifications)
             return res.status(200).json({status:200,message:`${emailFind.username} Reset Password Request Has been Submitted!`})
           } else {
             result = await userService.setForgotPassword(email, password);
@@ -530,24 +531,43 @@ const authController = {
           return res.status(500).json({ status: 500, message: "Internal Server Error" });
         }
       },
-       sendOtp :async (req, res) => {
+      sendOtp: async (req, res) => {
         try {
           const { email } = req.body;
-          const fund = await User.findOne({ email: email });
-          if (!fund) {
-            return res.status(404).json({status:404,message:"Invalid Email"});
-          }
-          const Otp = await ForgotPasswordOtp(fund.email);
+          const managerRole = await Role.findOne({ role_Name: "Manager" });
+          const user = await User.findOne({ email });
 
-          if (Otp) {
+          if (!user) {
+            return res.status(404).json({ status: 404, message: "Invalid Email" });
+          }
+
+          if (user.role === managerRole._id) {
+            const notifications = new ManagerResetPass({
+              userId: user._id,
+              description: `${user.username} requested a password reset against this email: ${email}`,
+            });
+            await notifications.save();
+
+            if (notifications) {
+              return res.status(200).json({
+                status: 200,
+                message: `${user.username}'s reset password request has been submitted!`,
+              });
+            }
+          }
+
+          const otp = await ForgotPasswordOtp(user.email);
+
+          if (otp) {
             // OTP is successfully sent
-            res.status(200).json({status:200, message: "OTP sent successfully" });
+            res.status(200).json({ status: 200, message: "OTP sent successfully" });
           } else {
             // If OTP is not sent
-            res.status(400).json({ status:400,message: "OTP not sent" });
+            res.status(400).json({ status: 400, message: "OTP not sent" });
           }
         } catch (error) {
-          console.log(error);
+          console.error(error);
+          res.status(500).json({ status: 500, message: "Internal Server Error" });
         }
       }
 

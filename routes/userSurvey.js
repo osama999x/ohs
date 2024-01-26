@@ -19,4 +19,6 @@ router.put('/update/:id', userSurveyController.updateSurvey);
 // DELETE survey by ID
 router.delete('/delete/:id', userSurveyController.deleteSurvey);
 
+router.post('/getName', userSurveyController.surveyController);
+
 module.exports = router;
